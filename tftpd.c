@@ -30,33 +30,39 @@ typedef char byte;
 // Our blocksize template. we need to do arithmetic later to figure
 // out our packet size later.
 unsigned int pre_block_size = 0x408; ///516 < 1
-unsigned int* server_status_code = (unsigned int *)malloc(sizeof(unsigned int));
+int* server_status_code;
 
 
-void get_buffer_size(int * super_code, int block_preset){
+int get_buffer_size(int * super_code, int block_preset){
 
-  block_preset = 2;
-  //int x = block_preset << *super_code;
-
-
-
+  //support
+  int x = block_preset >> *super_code;
+  *super_code = x;///store the new blocksize ALWAYS needs to be 1 when you get into here!
+  //enable null termination.
+  return x - 1;
 }
 
 int main(int argc, char **argv){
 
+  //create status descriptor.
+  server_status_code = (int *)malloc(sizeof(int));
+
   if(argc == 0){
     //prevent people from calling the server with no parameters.
     printf( "\aCannot call the server with 0 parameters. exiting with error %d", pre_block_size);
-    return -pre_block_size; //return our template size for debugging.
+    return *server_status_code; //return our server status for debugging.
   }
 
   else if( argv[1] == NULL){
-    //printf("There has been a problem\n");
+    //set error code.
+    *server_status_code = server_status_code;
+    printf("Problem: %d detected.\n", *server_status_code);
+    return *server_status_code;
   }
 
   *server_status_code = 1; // our server has started.
 
-  get_buffer_size( (int *)server_status_code, pre_block_size);
+  get_buffer_size( server_status_code, pre_block_size);
 
   printf("%d -> %d\n", *server_status_code, pre_block_size );
 
