@@ -1,0 +1,10 @@
+8) The mode string in the RRQ and WRQ is there
+to signify whether to send the data in 16 bit
+Ascii or in the 8 bit ascii. I chose to always
+send in the 8 byte ascii code because the
+the rfc specifies that the 16 byte Ascii exposes
+a vulnerability.
+
+9)when a POST request is made to the server, it replies
+with the statuscode 501 not implemented. This is specified
+in RFC 2616
