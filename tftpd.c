@@ -10,25 +10,34 @@
 #include <stdint.h>
 #include <limits.h>
 #include <errno.h>
-#include <stdbool.h>
 #include <signal.h>
+
 
 //create byte, needed to manipulate data on the bit level.
 typedef char byte;
 
 
-// debugging pointers from trigraphs //???/
+// debug fallbacks???/
 /*
 #define DEBUGSTARTER debug:
 #define DEBUGPOINTER goto debug;/*~
 */
 
-#ifndef DEBUGPOINTER
-//this should never run!
-//memo: if this runs, -trigraphs is not set in the Makefile
-#define DEBUGPOINTER exit();
-#define DEBUGSTARTER exit();
+// NO-OP handler for debug.
+#define NOOP ;
+#define break goto _;
+//default value for DEBUGMASK -- remember -trigraphs
+#ifndef DEBUGMASK
+#define DEBUGMASK 0xFF
 #endif
+
+#ifndef DEBUGPOINTER
+printf("Setting Debug pointers to NOOP")
+//memo: if this runs, "-trigraphs -Wno-comment" is not set in the Makefile
+#define DEBUGPOINTER NOOP;
+#define DEBUGSTARTER NOOP;
+#endif
+
 
 /*
 Here is my solution to how to write a good tftp server.
@@ -41,6 +50,10 @@ Only Benedikt H. Wrote this code. if there are problems. contact me on
 Twitter @BenediktHolm , as i only communicate through there.
 */
 
+// PLEASE DO NOT USE THIS CODE WITHOUT ASKING PERMISSION/CITING
+
+
+/* begin server */
 
 
 // Our blocksize template. we need to do arithmetic later to figure
@@ -86,6 +99,7 @@ void created_Listen_on_Socket(int server_File, struct sockaddr_in *SERVER_CLIENT
   //set the status code with the system call to bind IMPORTANT
   *server_Status_code = bind(server_File, (struct sockaddr *) SERVER_CLIENT, (socklen_t) sizeof(*SERVER_CLIENT) );
   //begin listening with the server_Status_code
+
   listen(server_File, 1);
 }
 
@@ -104,7 +118,7 @@ int main(int argc, char **argv){
     //prevent people from calling the server with no parameters.
     set_Error_code(server_Status_code);
     //must inform of error.
-    printf( "Cannot call the server with 0 parameters. exiting with error 0x%d", *server_Status_code);
+    printf( "Cannot call the server with 0 parameters. exiting with error 0x%d", *server_Status_code & DEBUGMASK);
     return *server_Status_code; //return our server status for debugging.
   }
 
@@ -112,7 +126,7 @@ int main(int argc, char **argv){
 
     //set error code.
     set_Error_code(server_Status_code);
-    printf("Problem: 0x%d detected.\n", *server_Status_code);
+    printf("Problem: 0x%d detected.\n", *server_Status_code & DEBUGMASK);
     return *server_Status_code;
   }
 
@@ -125,10 +139,9 @@ int main(int argc, char **argv){
   create_Listen_bind_Socket(argv, &server_Listening_struct);
   created_Listen_on_Socket(*socket_File_descriptor, &server_Listening_struct);
 
-  if(*server_Status_code < 0){
+  if(*server_Status_code < 0){ _:
     set_Error_code(server_Status_code);
-    printf("Problem: 0x%d detected.\n", *server_Status_code);
-    ///remove this return
+    printf("Bind error: 0x%d detected.\n", *server_Status_code & DEBUGMASK);
     return 1;
   }
 
@@ -167,9 +180,15 @@ int main(int argc, char **argv){
 
   sendto(*socket_File_descriptor, NULL, 0, 0, (const struct sockaddr *) &client_Listening_struct, receive_Client_length);
 
+  *server_Status_code = 0;
+
+  if(*server_Status_code == 0){
+    //if we want to end our server.
+    break
+  }
+
   DEBUGPOINTER
 
 
-
-  return 1;//*server_status_code;
+  return *server_Status_code;
 }
