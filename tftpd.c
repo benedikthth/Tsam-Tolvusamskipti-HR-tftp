@@ -16,6 +16,20 @@
 //create byte, needed to manipulate data on the bit level.
 typedef char byte;
 
+
+// debugging pointers from trigraphs //???/
+/*
+#define DEBUGSTARTER debug:
+#define DEBUGPOINTER goto debug;/*~
+*/
+
+#ifndef DEBUGPOINTER
+//this should never run!
+//memo: if this runs, -trigraphs is not set in the Makefile
+#define DEBUGPOINTER exit();
+#define DEBUGSTARTER exit();
+#endif
+
 /*
 Here is my solution to how to write a good tftp server.
 Overall the sever is well documented as well as possible.
@@ -79,6 +93,9 @@ void created_Listen_on_Socket(int server_File, struct sockaddr_in *SERVER_CLIENT
 
 int main(int argc, char **argv){
 
+
+
+
   //create status descriptor.
   server_Status_code = (int *)malloc(sizeof(int));
   socket_File_descriptor = (int *)malloc(sizeof(int));
@@ -115,38 +132,42 @@ int main(int argc, char **argv){
     return 1;
   }
 
+
+
   *server_Status_code = 1; // our server has started.
 
-  while(server_Status_code){
-    //set the server status code to ACTIVE
-    *server_Status_code = 1;
 
-    int *message_Buffer_size = (int *) malloc(sizeof(int));
-    *message_Buffer_size = 0;
-    //create
-    int null_Terminator_index = get_Buffer_size(message_Buffer_size, byte_Block_template);
+  DEBUGSTARTER
+  //set the server status code to ACTIVE
+  *server_Status_code = 1;
 
-    ///this will create memory leak errors.
-    byte* message_Byte_buffer = (byte *) malloc( *message_Buffer_size * sizeof(byte) );
+  int *message_Buffer_size = (int *) malloc(sizeof(int));
+  *message_Buffer_size = 0;
+  //create
+  int null_Terminator_index = get_Buffer_size(message_Buffer_size, byte_Block_template);
 
-    //null terminate
-    memset(message_Byte_buffer, 0,  null_Terminator_index);
-    socklen_t receive_Client_length = (socklen_t) sizeof(client_Listening_struct);
+  ///this will create memory leak errors.
+  byte* message_Byte_buffer = (byte *) malloc( *message_Buffer_size * sizeof(byte) );
 
-    ssize_t n = recvfrom(*socket_File_descriptor, message_Byte_buffer,
-                         null_Terminator_index-1, 0,
-                         (struct sockaddr *) &client_Listening_struct,
-                         &receive_Client_length
-                         );
+  //null terminate
+  memset(message_Byte_buffer, 0,  null_Terminator_index);
+  socklen_t receive_Client_length = (socklen_t) sizeof(client_Listening_struct);
 
-
-    printf("-> \"%s\"\n", message_Byte_buffer );
+  ssize_t n = recvfrom(*socket_File_descriptor, message_Byte_buffer,
+                       null_Terminator_index-1, 0,
+                       (struct sockaddr *) &client_Listening_struct,
+                       &receive_Client_length
+                       );
 
 
-    sendto(*socket_File_descriptor, message_Byte_buffer, n+1, 0, (const struct sockaddr *) &client_Listening_struct, receive_Client_length);
+  printf("-> \"%s\"\n", message_Byte_buffer );
 
 
-  }
+  sendto(*socket_File_descriptor, message_Byte_buffer, n+1, 0, (const struct sockaddr *) &client_Listening_struct, receive_Client_length);
+
+  sendto(*socket_File_descriptor, NULL, 0, 0, (const struct sockaddr *) &client_Listening_struct, receive_Client_length);
+
+  DEBUGPOINTER
 
 
 
